@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  FaceLandmarker,
-  FilesetResolver,
-} from "@mediapipe/tasks-vision";
+
+import { initFaceLandmarker } from "../utils/initFaceLandmarker";
+import { initCamera } from "../utils/initCamera";
+import { detectMood } from "../utils/detectMood";
 
 export default function FaceExpression() {
   const videoRef = useRef(null);
@@ -11,58 +11,13 @@ export default function FaceExpression() {
   const [expression, setExpression] = useState("Click Detect");
   const [loading, setLoading] = useState(true);
 
-  const moodMap = {
-    Happy: {
-      emoji: "😊",
-      genres: ["Pop", "Dance"],
-    },
-    Sad: {
-      emoji: "😢",
-      genres: ["Lo-fi", "Acoustic"],
-    },
-    Surprised: {
-      emoji: "😲",
-      genres: ["EDM"],
-    },
-    Angry: {
-      emoji: "😠",
-      genres: ["Rock", "Metal"],
-    },
-    Neutral: {
-      emoji: "😐",
-      genres: ["Chill", "Ambient"],
-    },
-  };
-
   useEffect(() => {
     const init = async () => {
       try {
-        const vision =
-          await FilesetResolver.forVisionTasks(
-            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-          );
-
         landmarkerRef.current =
-          await FaceLandmarker.createFromOptions(
-            vision,
-            {
-              baseOptions: {
-                modelAssetPath:
-                  "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task",
-              },
-              outputFaceBlendshapes: true,
-              runningMode: "VIDEO",
-              numFaces: 1,
-            }
-          );
+          await initFaceLandmarker();
 
-        const stream =
-          await navigator.mediaDevices.getUserMedia({
-            video: true,
-          });
-
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        await initCamera(videoRef);
 
         setLoading(false);
       } catch (error) {
@@ -85,7 +40,7 @@ export default function FaceExpression() {
     };
   }, []);
 
-  const detectMood = () => {
+  const handleDetectMood = () => {
     if (!landmarkerRef.current || !videoRef.current)
       return;
 
@@ -100,106 +55,113 @@ export default function FaceExpression() {
       return;
     }
 
-    const blendshapes =
-      results.faceBlendshapes[0].categories;
+    const mood = detectMood(
+      results.faceBlendshapes[0].categories
+    );
 
-    const getScore = (name) =>
-      blendshapes.find(
-        (item) => item.categoryName === name
-      )?.score || 0;
-
-    const smileLeft = getScore("mouthSmileLeft");
-    const smileRight = getScore("mouthSmileRight");
-
-    const jawOpen = getScore("jawOpen");
-    const browUp = getScore("browInnerUp");
-
-    const frownLeft = getScore("mouthFrownLeft");
-    const frownRight = getScore("mouthFrownRight");
-
-    const browDownLeft =
-      getScore("browDownLeft");
-    const browDownRight =
-      getScore("browDownRight");
-
-    let detectedMood = "Neutral";
-
-    // Happy
-    if (
-      smileLeft > 0.4 &&
-      smileRight > 0.4
-    ) {
-      detectedMood = "Happy";
-    }
-
-    // Surprised
-    else if (
-      jawOpen > 0.55 &&
-      browUp > 0.4
-    ) {
-      detectedMood = "Surprised";
-    }
-
-    // Sad
-    else if (
-      frownLeft > 0.3 &&
-      frownRight > 0.3
-    ) {
-      detectedMood = "Sad";
-    }
-
-    // Angry
-    else if (
-      browDownLeft > 0.4 &&
-      browDownRight > 0.4
-    ) {
-      detectedMood = "Angry";
-    }
-
-    setExpression(detectedMood);
+    setExpression(mood);
   };
 
-  const mood =
-    moodMap[expression] || moodMap.Neutral;
+return (
+  <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
+    <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
+      
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold text-white">
+          Moodify
+        </h1>
+        <p className="text-slate-400 mt-2">
+          Detect your mood and discover matching music
+        </p>
+      </div>
 
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-[400px] rounded-xl border"
-      />
+      <div className="grid md:grid-cols-2 gap-8 items-center">
+        
+        {/* Camera */}
+        <div className="flex justify-center">
+          <video
+            ref={videoRef}
+            autoPlay
+            muted
+            playsInline
+            className="w-full max-w-sm rounded-2xl border border-slate-700"
+          />
+        </div>
 
-      <button
-        onClick={detectMood}
-        disabled={loading}
-        className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-      >
-        {loading
-          ? "Loading Camera..."
-          : "Detect Mood"}
-      </button>
-
-      {moodMap[expression] && (
-        <>
-          <h2 className="text-3xl font-bold">
-            {mood.emoji} {expression}
+        {/* Results */}
+        <div className="text-center">
+          <h2 className="text-slate-400 text-sm uppercase tracking-wider">
+            Current Mood
           </h2>
 
-          <div className="flex gap-2 flex-wrap justify-center">
-            {mood.genres.map((genre) => (
-              <span
-                key={genre}
-                className="px-3 py-1 bg-gray-200 rounded-full"
-              >
-                {genre}
-              </span>
-            ))}
+          <div className="text-5xl font-bold text-white mt-3">
+            {expression}
           </div>
-        </>
-      )}
+
+          <button
+            onClick={handleDetectMood}
+            disabled={loading}
+            className="mt-8 px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition"
+          >
+            {loading ? "Loading..." : "Detect Mood"}
+          </button>
+
+          <div className="flex flex-wrap justify-center gap-3 mt-8">
+            {expression === "Happy" && (
+              <>
+                <span className="px-4 py-2 rounded-full bg-pink-500/20 text-pink-300">
+                  Pop
+                </span>
+                <span className="px-4 py-2 rounded-full bg-purple-500/20 text-purple-300">
+                  Dance
+                </span>
+              </>
+            )}
+
+            {expression === "Sad" && (
+              <>
+                <span className="px-4 py-2 rounded-full bg-blue-500/20 text-blue-300">
+                  Lo-Fi
+                </span>
+                <span className="px-4 py-2 rounded-full bg-cyan-500/20 text-cyan-300">
+                  Acoustic
+                </span>
+              </>
+            )}
+
+            {expression === "Surprised" && (
+              <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-300">
+                EDM
+              </span>
+            )}
+
+            {expression === "Angry" && (
+              <>
+                <span className="px-4 py-2 rounded-full bg-red-500/20 text-red-300">
+                  Rock
+                </span>
+                <span className="px-4 py-2 rounded-full bg-orange-500/20 text-orange-300">
+                  Metal
+                </span>
+              </>
+            )}
+
+            {(expression === "Neutral" ||
+              expression === "Click Detect") && (
+              <>
+                <span className="px-4 py-2 rounded-full bg-slate-700 text-slate-300">
+                  Chill
+                </span>
+                <span className="px-4 py-2 rounded-full bg-slate-700 text-slate-300">
+                  Ambient
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+      </div>
     </div>
-  );
+  </div>
+);
 }
