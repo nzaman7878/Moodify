@@ -1,6 +1,5 @@
-const userModel = require("../models/user.model");
-
 const jwt = require("jsonwebtoken");
+const blacklistModel = require("../models/blacklist.model");
 
 async function authUser(req, res, next) {
   try {
@@ -10,6 +9,18 @@ async function authUser(req, res, next) {
       return res.status(401).json({
         success: false,
         message: "Token not found. Please login to access this resource",
+      });
+    }
+
+    // Check blacklist
+    const blacklistedToken = await blacklistModel.findOne({
+      token,
+    });
+
+    if (blacklistedToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Session expired. Please login again",
       });
     }
 
