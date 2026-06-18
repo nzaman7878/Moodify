@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const blacklistModel = require("../models/blacklist.model");
+const blacklistModel = require("../models/backlist.model");
+const redisClient = require("../config/cache");
 
 async function authUser(req, res, next) {
   try {
