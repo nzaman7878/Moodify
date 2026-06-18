@@ -91,6 +91,10 @@ export const useAuth = () => {
     }
   }
 
+  useEffect(() => {
+    handleGetMe();
+  }, []);
+
   return {
     user,
     loading,
