@@ -8,9 +8,9 @@ const redisClient = require("../config/cache");
 // Register User
 async function registerUser(req, res) {
   try {
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (!username || !email || !password) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",
@@ -18,20 +18,20 @@ async function registerUser(req, res) {
     }
 
     const isAlreadyRegistered = await userModel.findOne({
-      $or: [{ name }, { email }],
+      $or: [{ username }, { email }],
     });
 
     if (isAlreadyRegistered) {
       return res.status(400).json({
         success: false,
-        message: "User with same name or email already exists",
+        message: "User with same username or email already exists",
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await userModel.create({
-      name,
+      username,
       email,
       password: hashedPassword,
     });
@@ -39,7 +39,7 @@ async function registerUser(req, res) {
     const token = jwt.sign(
       {
         id: user._id,
-        name: user.name,
+        username: user.username,
       },
       process.env.JWT_SECRET,
       {
@@ -57,7 +57,7 @@ async function registerUser(req, res) {
       message: "User registered successfully",
       user: {
         id: user._id,
-        name: user.name,
+        username: user.username,
         email: user.email,
       },
       token,
@@ -108,7 +108,7 @@ async function loginUser(req, res) {
     const token = jwt.sign(
       {
         id: user._id,
-        name: user.name,
+        username: user.username,
       },
       process.env.JWT_SECRET,
       {
@@ -126,7 +126,7 @@ async function loginUser(req, res) {
       message: "User logged in successfully",
       user: {
         id: user._id,
-        name: user.name,
+        username: user.username,
         email: user.email,
       },
       token,
