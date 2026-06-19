@@ -10,4 +10,6 @@ router.post(
   songController.uploadSong
 );
 
+router.get("/", songController.getSong);
+
 module.exports = router;
