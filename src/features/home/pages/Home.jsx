@@ -56,7 +56,7 @@ const HomeContent = () => {
 
         <section className="grid gap-8 lg:grid-cols-[1fr_420px] lg:items-start">
           <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900">
-            <FaceExpression />
+            <FaceExpression onMoodDetected={handleMoodSelect} />
           </div>
 
           <aside className="flex flex-col gap-5">
@@ -64,6 +64,7 @@ const HomeContent = () => {
 
             <div className="rounded-3xl border border-slate-800 bg-slate-900 p-5">
               <h2 className="text-lg font-semibold">Pick a mood</h2>
+
               <div className="mt-4 grid grid-cols-1 gap-3">
                 {moods.map((mood) => (
                   <button
