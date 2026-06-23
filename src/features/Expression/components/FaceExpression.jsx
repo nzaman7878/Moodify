@@ -4,7 +4,10 @@ import { initFaceLandmarker } from "../utils/initFaceLandmarker";
 import { initCamera } from "../utils/initCamera";
 import { detectMood } from "../utils/detectMood";
 
-export default function FaceExpression({ onMoodDetected }) {
+export default function FaceExpression({
+  onMoodDetected,
+  onExpressionChange,
+}) {
   const videoRef = useRef(null);
   const landmarkerRef = useRef(null);
 
@@ -12,10 +15,13 @@ export default function FaceExpression({ onMoodDetected }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let videoElement = null;
+
     const init = async () => {
       try {
         landmarkerRef.current = await initFaceLandmarker();
         await initCamera(videoRef);
+        videoElement = videoRef.current;
         setLoading(false);
       } catch (error) {
         console.error(error);
@@ -25,8 +31,8 @@ export default function FaceExpression({ onMoodDetected }) {
     init();
 
     return () => {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject
+      if (videoElement?.srcObject) {
+        videoElement.srcObject
           .getTracks()
           .forEach((track) => track.stop());
       }
@@ -55,13 +61,14 @@ export default function FaceExpression({ onMoodDetected }) {
     );
 
     setExpression(mood);
+    onExpressionChange?.(mood);
 
     const moodMap = {
       Happy: "happy",
       Sad: "sad",
       Surprised: "surprised",
       Angry: "angry",
-      Neutral: "happy",
+      Neutral: "neutral",
     };
 
     const apiMood = moodMap[mood] || "happy";
@@ -72,38 +79,38 @@ export default function FaceExpression({ onMoodDetected }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
-          <div className="flex justify-center">
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              className="w-full max-w-sm rounded-2xl border border-slate-700"
-            />
-          </div>
+    <div className="w-full max-w-[340px] rounded-[1.4rem] border border-cyan-200/10 bg-cyan-100/10 p-5 text-center shadow-[0_0_55px_rgba(45,212,191,0.24)] backdrop-blur">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200">
+        Moodify
+      </p>
+      <h2 className="mt-2 text-2xl font-black text-white">
+        Expression Capture
+      </h2>
 
-          <div className="text-center">
-            <h2 className="text-slate-400 text-sm uppercase tracking-wider">
-              Current Mood
-            </h2>
+      <div className="mt-5 rounded-xl border border-cyan-200/20 bg-[#071225]/90 p-4 shadow-[inset_0_0_38px_rgba(8,145,178,0.2)]">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className="aspect-video w-full rounded-lg border border-cyan-200/10 bg-slate-950 object-cover"
+        />
 
-            <div className="text-5xl font-bold text-white mt-3">
-              {expression}
-            </div>
-
-            <button
-              onClick={handleDetectMood}
-              disabled={loading}
-              className="mt-8 px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition"
-            >
-              {loading ? "Loading..." : "Detect Mood"}
-            </button>
-          </div>
+        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-white/55">
+          Mood Detected
+        </p>
+        <div className="mt-2 text-3xl font-black text-lime-300">
+          {expression}
         </div>
       </div>
+
+      <button
+        onClick={handleDetectMood}
+        disabled={loading}
+        className="mt-5 h-12 w-full rounded-lg bg-cyan-300 text-sm font-black tracking-wide text-cyan-950 shadow-[0_0_24px_rgba(103,232,249,0.35)] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-white/50"
+      >
+        {loading ? "Loading..." : "Detect Again"}
+      </button>
     </div>
   );
 }

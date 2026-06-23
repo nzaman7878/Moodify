@@ -1,13 +1,14 @@
-import { getSong } from "../services/song.api";
-import { useContext } from "react";
+import { useContext, useCallback } from "react";
 import { SongContext } from "../song.context";
+import { getSong, getRecommendations } from "../services/song.api"; 
 
 export const useSong = () => {
   const context = useContext(SongContext);
 
-  const { loading, setLoading, song, setSong } = context;
+ 
+  const { loading, setLoading, song, setSong, recommendations, setRecommendations } = context;
 
-  async function handleGetSong({ mood }) {
+  const handleGetSong = useCallback(async ({ mood }) => {
     setLoading(true);
 
     try {
@@ -16,11 +17,28 @@ export const useSong = () => {
     } finally {
       setLoading(false);
     }
+  }, [setLoading, setSong]); 
+ 
+  const handleGetRecommendations = useCallback(async ({ mood }) => {
+    try {
+      const data = await getRecommendations({ mood }); 
+      setRecommendations(data.recommendations || data.songs || []);
+    } catch (error) {
+      console.error("Failed to fetch recommendations", error);
+      throw error; 
+    }
+  }, [setRecommendations]);
+ 
+  function handleSelectSong(selectedSong) {
+    setSong(selectedSong);
   }
 
   return {
     loading,
     song,
+    recommendations,           
     handleGetSong,
+    handleGetRecommendations,  
+    handleSelectSong,          
   };
 };

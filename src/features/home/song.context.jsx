@@ -4,18 +4,20 @@ export const SongContext = createContext();
 
 export const SongContextProvider = ({ children }) => {
   const [song, setSong] = useState({
-    url: "https://ik.imagekit.io/hnoglyswo0/cohort-2/moodify/songs/Lady_Singham_gs01DFz-1.mp3",
-    posterUrl:
-      "https://ik.imagekit.io/hnoglyswo0/cohort-2/moodify/posters/Lady_Singham_VW8DGJkie",
-    title: "Lady Singham",
+    url: "https://ik.imagekit.io/cydvbllrq/Nuruz/moodify/songs/Sitaare_QTNOnTsFV.mp3?updatedAt=1781810135469",
+    posterUrl: "https://ik.imagekit.io/cydvbllrq/Nuruz/moodify/posters/Sitaare_SMde_32Bj.jpeg?updatedAt=1781810099499",
+    title: "Sitaare",
     mood: "happy",
   });
 
   const [loading, setLoading] = useState(false);
 
+  const [recommendations, setRecommendations] = useState([]);
+
   return (
     <SongContext.Provider
-      value={{ loading, setLoading, song, setSong }}
+     
+      value={{ loading, setLoading, song, setSong, recommendations, setRecommendations }}
     >
       {children}
     </SongContext.Provider>

@@ -8,46 +8,40 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        
-        {/* Left */}
+    <nav className="border-b border-white/10 bg-[#0b1128]/80 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1480px] items-center justify-between px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl">
-            M
+          <div className="flex h-8 w-8 items-end justify-center gap-0.5 rounded-lg bg-violet-500/10 p-1.5 text-cyan-200">
+            <span className="h-3 w-1 rounded-full bg-violet-400" />
+            <span className="h-5 w-1 rounded-full bg-cyan-300" />
+            <span className="h-4 w-1 rounded-full bg-blue-300" />
           </div>
 
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-black text-violet-200">
             Moodify
           </h1>
         </div>
 
-        {/* Right */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 text-right">
+            <div className="hidden md:block">
+              <p className="font-black leading-tight text-white">
+                {user?.username || "Guest"}
+              </p>
+              <button
+                onClick={logoutUser}
+                disabled={loading}
+                className="text-sm font-bold leading-tight text-cyan-200 transition hover:text-cyan-100 disabled:opacity-50"
+              >
+                {loading ? "..." : "logout"}
+              </button>
+            </div>
             <img
               src={`https://ui-avatars.com/api/?name=${user?.username || "User"}&background=random`}
               alt="profile"
-              className="w-10 h-10 rounded-full"
+              className="h-12 w-12 rounded-full border-2 border-cyan-200/30"
             />
-
-            <div className="hidden md:block">
-              <p className="font-semibold">
-                {user?.username || "Guest"}
-              </p>
-              <p className="text-sm text-gray-500">
-                {user?.email || ""}
-              </p>
-            </div>
           </div>
-
-          <button
-            onClick={logoutUser}
-            disabled={loading}
-            className="px-4 py-2 rounded-xl bg-red-500 text-white hover:bg-red-600 transition"
-          >
-            {loading ? "..." : "Logout"}
-          </button>
         </div>
       </div>
     </nav>
