@@ -4,6 +4,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/auth.routes");
 const songRoutes = require("./routes/song.routes");
+const historyRoutes = require("./routes/history.routes");
 
 const app = express();
 const allowedOrigins = [
@@ -31,5 +32,6 @@ app.use(
 
 app.use("/api/auth", authRoutes);
 app.use("/api/songs", songRoutes);
+app.use("/api/history", historyRoutes);
 
 module.exports = app;
