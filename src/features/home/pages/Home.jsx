@@ -1,18 +1,13 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSong } from "../hooks/useSong";
 import { SongContextProvider } from "../song.context";
+import { getMoodHistory, saveMoodHistory } from "../services/song.api";
 import Navbar from "../components/Navbar";
 import Player from "../components/Player";
 import FaceExpression from "../../Expression/components/FaceExpression";
 import CurrentMoodCard from "../components/CurrentMoodCard";
 import MoodHistory from "../components/MoodHistory";
 import RecommendationsSidebar from "../components/RecommendationsSidebar";
-
-const moodHistory = [
-  { label: "Neutral", time: "04:59 PM", active: true },
-  { label: "Happy", time: "04:58 PM", active: false },
-  { label: "Neutral", time: "04:56 PM", active: false },
-];
 
 const fallbackRecommendations = [
   "Fateh Kar Fateh (From Fateh)",
@@ -52,13 +47,32 @@ const HomeContent = () => {
 
   const [selectedMood, setSelectedMood] = useState("neutral");
   const [detectedMood, setDetectedMood] = useState("Neutral");
-  const [history, setHistory] = useState(moodHistory);
+
+  const [fullHistory, setFullHistory] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
+  
     handleGetRecommendations({}).catch(() => {
       setError("Could not load recommendations from the backend.");
     });
+
+    getMoodHistory()
+      .then((data) => {
+        if (data.history) {
+          const formattedHistory = data.history.map((item, index) => ({
+            _id: item._id, 
+            label: moodLabels[item.mood] || item.mood,
+            time: new Date(item.createdAt).toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            active: index === 0, 
+          }));
+          setFullHistory(formattedHistory);
+        }
+      })
+      .catch((err) => console.error("Could not load history", err));
   }, [handleGetRecommendations]);
 
   const handleMoodSelect = useCallback(
@@ -69,10 +83,15 @@ const HomeContent = () => {
       setError("");
 
       try {
-        await handleGetSong({ mood });
 
-        setHistory((currentHistory) => {
+        await handleGetSong({ mood });
+       
+        await saveMoodHistory({ mood });
+
+     
+        setFullHistory((currentHistory) => {
           const newEntry = {
+            _id: Date.now().toString(), 
             label: moodLabels[mood] || mood,
             time: new Date().toLocaleTimeString("en-IN", {
               hour: "2-digit",
@@ -81,9 +100,10 @@ const HomeContent = () => {
             active: true,
           };
 
-          const previousEntries = currentHistory
-            .slice(0, 2)
-            .map((item) => ({ ...item, active: false })); // Set older dots to amber
+          const previousEntries = currentHistory.map((item) => ({ 
+            ...item, 
+            active: false 
+          }));
 
           return [newEntry, ...previousEntries];
         });
@@ -99,6 +119,10 @@ const HomeContent = () => {
 
   const visibleRecommendations =
     recommendations?.length > 0 ? recommendations : fallbackRecommendations;
+
+
+  const recentHistory = fullHistory.slice(0, 3);
+  const sevenDayHistory = fullHistory.slice(3);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#080d22] text-white">
@@ -122,7 +146,11 @@ const HomeContent = () => {
               moodLabels={moodLabels}
             />
 
-            <MoodHistory history={history} />
+    
+            <MoodHistory 
+              recentHistory={recentHistory} 
+              sevenDayHistory={sevenDayHistory} 
+            />
 
             <Player />
 
