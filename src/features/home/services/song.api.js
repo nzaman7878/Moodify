@@ -22,3 +22,15 @@ export async function getRecommendations({ mood }) {
   const response = await api.get(url);
   return response.data;
 }
+
+// ADD THESE TO THE BOTTOM OF YOUR API FILE:
+
+export async function getMoodHistory() {
+  const response = await api.get("/api/history");
+  return response.data;
+}
+
+export async function saveMoodHistory({ mood }) {
+  const response = await api.post("/api/history", { mood });
+  return response.data;
+}

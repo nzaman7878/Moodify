@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema(
   {
@@ -8,7 +9,6 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -16,7 +16,6 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-
     password: {
       type: String,
       required: [true, "Password is required"],
@@ -27,10 +26,33 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+
+userSchema.pre("save", async function (next) {
+  
+  if (!this.isModified("password")) {
+    return next();
+  }
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next(); 
+  } catch (error) {
+    next(error);
+  }
+});
+
+userSchema.post("save", function (doc, next) {
+
+
+  next();
+});
+
+
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
 const userModel = mongoose.model("User", userSchema);
 
 module.exports = userModel;
-
-//tags 
-//userSchema.pre('save', async function(next) {})
-//userSchema.post('save', async function(doc, next) {})
