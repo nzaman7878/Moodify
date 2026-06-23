@@ -4,6 +4,7 @@ import FaceExpression from "../../Expression/components/FaceExpression";
 import Player from "../components/Player";
 import { useSong } from "../hooks/useSong";
 import { SongContextProvider } from "../song.context";
+import Navbar from "../components/Navbar";
 
 const moods = [
   {
@@ -44,6 +45,7 @@ const HomeContent = () => {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
+        <Navbar />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8">
         <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
