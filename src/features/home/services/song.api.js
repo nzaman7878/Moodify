@@ -34,3 +34,8 @@ export async function saveMoodHistory({ mood }) {
   const response = await api.post("/api/history", { mood });
   return response.data;
 }
+
+export async function fetchWeeklyHistory() {
+  const response = await api.get("/api/history/weekly");
+  return response.data;
+}

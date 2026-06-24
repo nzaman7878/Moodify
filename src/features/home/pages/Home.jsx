@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSong } from "../hooks/useSong";
 import { SongContextProvider } from "../song.context";
-import { getMoodHistory, saveMoodHistory } from "../services/song.api";
+import { getMoodHistory, saveMoodHistory, fetchWeeklyHistory } from "../services/song.api";
 import Navbar from "../components/Navbar";
 import Player from "../components/Player";
 import FaceExpression from "../../Expression/components/FaceExpression";
@@ -35,6 +35,19 @@ const moodLabels = {
   surprised: "Surprised",
 };
 
+const moodScores = {
+  angry: 10,
+  sad: 25,
+  neutral: 50,
+  surprised: 75,
+  happy: 90,
+  Angry: 10,
+  Sad: 25,
+  Neutral: 50,
+  Surprised: 75,
+  Happy: 90,
+};
+
 const HomeContent = () => {
   const {
     handleGetRecommendations,
@@ -48,31 +61,91 @@ const HomeContent = () => {
   const [selectedMood, setSelectedMood] = useState("neutral");
   const [detectedMood, setDetectedMood] = useState("Neutral");
 
-  const [fullHistory, setFullHistory] = useState([]);
+  // 2. SEPARATED STATES: One for the timeline list, one for the Recharts graph
+  const [recentHistory, setRecentHistory] = useState([]);
+  const [weeklyHistory, setWeeklyHistory] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-  
     handleGetRecommendations({}).catch(() => {
       setError("Could not load recommendations from the backend.");
     });
 
+    // --- FETCH RECENT TIMELINE (Top 10) ---
     getMoodHistory()
       .then((data) => {
         if (data.history) {
-          const formattedHistory = data.history.map((item, index) => ({
-            _id: item._id, 
-            label: moodLabels[item.mood] || item.mood,
-            time: new Date(item.createdAt).toLocaleTimeString("en-IN", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            active: index === 0, 
-          }));
-          setFullHistory(formattedHistory);
+          const formattedRecent = data.history.map((item, index) => {
+            const dateObj = new Date(item.createdAt);
+            const moodLabel = moodLabels[item.mood] || item.mood;
+            return {
+              _id: item._id,
+              label: moodLabel,
+              active: index === 0,
+              time: dateObj.toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            };
+          });
+          setRecentHistory(formattedRecent);
         }
       })
-      .catch((err) => console.error("Could not load history", err));
+      .catch((err) => console.error("Could not load recent history", err));
+
+    // --- FETCH 7-DAY CHART DATA (No limits) ---
+ fetchWeeklyHistory()
+      .then((data) => {
+        if (data.data) {
+          
+          // 1. Generate an array of the last 7 days (e.g., ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"])
+          const last7Days = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            last7Days.push(d.toLocaleDateString("en-US", { weekday: "short" }));
+          }
+
+          // 2. Group the backend data by day so we can easily look it up
+          const dataByDay = {};
+          data.data.forEach((item) => {
+            const d = new Date(item.createdAt);
+            const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
+            
+            // This will keep the LATEST mood captured on that specific day
+            dataByDay[dayLabel] = item; 
+          });
+
+          // 3. Merge the generated days with your database data!
+          const formattedWeekly = last7Days.map((dayLabel) => {
+            const item = dataByDay[dayLabel];
+            
+            // If the user recorded a mood on this day, format it normally
+            if (item) {
+              const safeMoodString = item.mood ? item.mood.toLowerCase() : "neutral";
+              const moodLabel = moodLabels[safeMoodString] || item.mood;
+              return {
+                day: dayLabel,
+                time: new Date(item.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+                mood: moodLabel,
+                score: moodScores[safeMoodString] || 50,
+              };
+            } 
+            
+            // If there is no data for this day, return a blank slate
+            return {
+              day: dayLabel,
+              time: "--",
+              mood: "No Activity",
+              score: 0, // 0 makes the chart drop to the bottom beautifully
+            };
+          });
+
+          setWeeklyHistory(formattedWeekly);
+        }
+      })
+      .catch((err) => console.error("Could not load weekly history", err));
+
   }, [handleGetRecommendations]);
 
   const handleMoodSelect = useCallback(
@@ -83,46 +156,67 @@ const HomeContent = () => {
       setError("");
 
       try {
-
         await handleGetSong({ mood });
-       
         await saveMoodHistory({ mood });
 
-     
-        setFullHistory((currentHistory) => {
+        const now = new Date();
+        const safeMoodString = mood.toLowerCase();
+        const moodLabel = moodLabels[safeMoodString] || mood;
+
+        // 3. INSTANTLY UPDATE THE TIMELINE LIST
+        setRecentHistory((currentHistory) => {
           const newEntry = {
-            _id: Date.now().toString(), 
-            label: moodLabels[mood] || mood,
-            time: new Date().toLocaleTimeString("en-IN", {
+            _id: Date.now().toString(),
+            label: moodLabel,
+            active: true,
+            time: now.toLocaleTimeString("en-IN", {
               hour: "2-digit",
               minute: "2-digit",
             }),
-            active: true,
           };
-
-          const previousEntries = currentHistory.map((item) => ({ 
-            ...item, 
-            active: false 
+          const previousEntries = currentHistory.map((item) => ({
+            ...item,
+            active: false,
           }));
-
           return [newEntry, ...previousEntries];
         });
+
+// --- FETCH 7-DAY CHART DATA (Shows EVERY single entry) ---
+    fetchWeeklyHistory()
+      .then((data) => {
+        if (data.data) {
+          
+          
+          const formattedWeekly = data.data.map((item) => {
+            const dateObj = new Date(item.createdAt);
+            const safeMoodString = item.mood ? item.mood.toLowerCase() : "neutral";
+            const moodLabel = moodLabels[safeMoodString] || item.mood;
+
+            return {
+              day: dateObj.toLocaleDateString("en-US", { weekday: "short" }), // "Wed"
+              time: dateObj.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }), // "12:50 PM"
+              mood: moodLabel,
+              score: moodScores[safeMoodString] || 50,
+            };
+          });
+
+          // Set the state with ALL entries, no throwing data away!
+          setWeeklyHistory(formattedWeekly);
+        }
+      })
+      .catch((err) => console.error("Could not load weekly history", err));
       } catch (err) {
         setError(
           err?.response?.data?.message ||
-            "Could not find a song for this mood.",
+            "Could not find a song for this mood."
         );
       }
     },
-    [selectedMood, error, loading, handleGetSong],
+    [selectedMood, error, loading, handleGetSong]
   );
 
   const visibleRecommendations =
     recommendations?.length > 0 ? recommendations : fallbackRecommendations;
-
-
-  const recentHistory = fullHistory.slice(0, 3);
-  const sevenDayHistory = fullHistory.slice(3);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#080d22] text-white">
@@ -146,10 +240,10 @@ const HomeContent = () => {
               moodLabels={moodLabels}
             />
 
-    
-            <MoodHistory 
-              recentHistory={recentHistory} 
-              sevenDayHistory={sevenDayHistory} 
+            {/* 5. Pass the cleanly separated data down! */}
+            <MoodHistory
+              recentHistory={recentHistory.slice(0, 4)} // Show top 4 in the list
+              sevenDayHistory={weeklyHistory}           // Show full week in the chart
             />
 
             <Player />
