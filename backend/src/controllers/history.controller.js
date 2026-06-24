@@ -1,6 +1,5 @@
 const History = require("../models/history.model");
 
-
 exports.logHistory = async (req, res) => {
   try {
     const { mood } = req.body;
@@ -18,12 +17,9 @@ exports.logHistory = async (req, res) => {
   }
 };
 
-
 exports.getHistory = async (req, res) => {
   try {
- 
     const historyLogs = await History.find().sort({ createdAt: -1 }).limit(10);
-
     res.status(200).json({ success: true, history: historyLogs });
   } catch (error) {
     console.error("Error fetching history:", error);
@@ -31,7 +27,27 @@ exports.getHistory = async (req, res) => {
   }
 };
 
+async function getWeeklyHistory(req, res) {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const history = await History.find({
+      createdAt: { $gte: sevenDaysAgo }
+    }).sort({ createdAt: 1 }); 
+
+    res.status(200).json({
+      success: true,
+      data: history
+    });
+  } catch (error) {
+    console.error("Error in getWeeklyHistory:", error); // Logs the error safely!
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
 module.exports = {
   logHistory: exports.logHistory,
   getHistory: exports.getHistory,
+  getWeeklyHistory: getWeeklyHistory
 };
