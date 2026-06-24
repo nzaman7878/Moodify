@@ -10,6 +10,15 @@ import MoodHistory from "../components/MoodHistory";
 import RecommendationsSidebar from "../components/RecommendationsSidebar";
 import VibeExport from "../components/VibeExport";
 
+// Shared design system accents for the global background glow
+const moodAccents = {
+  happy:     { glow: "rgba(250,204,21,0.12)" },
+  sad:       { glow: "rgba(96,165,250,0.12)" },
+  angry:     { glow: "rgba(239,68,68,0.12)" },
+  surprised: { glow: "rgba(192,132,252,0.12)"},
+  neutral:   { glow: "rgba(34,211,238,0.08)" },
+};
+
 const fallbackRecommendations = [
   "Fateh Kar Fateh (From Fateh)",
   "Restart - Rap (From 12th Fail)",
@@ -176,28 +185,54 @@ const HomeContent = () => {
   const visibleRecommendations =
     recommendations?.length > 0 ? recommendations : fallbackRecommendations;
 
-   const handleDeletedEntry = (itemId) => {
-  setRecentHistory((prevHistory) => 
-    prevHistory.filter(item => item._id !== itemId)
-  );
-};
+  const handleDeletedEntry = (itemId) => {
+    setRecentHistory((prevHistory) => 
+      prevHistory.filter(item => item._id !== itemId)
+    );
+  };
+
+  // Determine global ambient color based on active mood
+  const activeKey = ["happy", "sad", "angry", "surprised", "neutral"].includes(selectedMood.toLowerCase())
+    ? selectedMood.toLowerCase()
+    : "neutral";
+  const globalAccent = moodAccents[activeKey];
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#080d22] text-white">
-      <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_18%_26%,rgba(43,205,213,0.22),transparent_30%),radial-gradient(circle_at_68%_18%,rgba(31,123,186,0.22),transparent_28%),linear-gradient(135deg,#070b1d_0%,#0b1430_48%,#070918_100%)]" />
+    <main className="relative min-h-screen overflow-x-hidden bg-[#050810] text-white">
+      
+      {/* DYNAMIC AMBIENT BACKGROUND */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        {/* Deep space base grid/gradient */}
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,#050810_0%,#0b1120_50%,#050810_100%)] opacity-80" />
+        {/* Dynamic top-left glow */}
+        <div 
+          className="absolute -left-[20%] -top-[10%] h-[800px] w-[800px] rounded-full blur-[120px] transition-colors duration-1000 ease-in-out"
+          style={{ background: globalAccent.glow }}
+        />
+        {/* Dynamic bottom-right glow */}
+        <div 
+          className="absolute -bottom-[20%] -right-[10%] h-[600px] w-[600px] rounded-full blur-[100px] transition-colors duration-1000 ease-in-out"
+          style={{ background: globalAccent.glow }}
+        />
+      </div>
 
       <div className="relative z-10">
         <Navbar />
 
-        <section className="mx-auto grid min-h-[calc(100vh-82px)] w-full max-w-[1480px] grid-cols-1 gap-6 px-5 py-7 lg:grid-cols-[390px_minmax(480px,1fr)_390px] xl:grid-cols-[430px_minmax(560px,1fr)_420px]">
-          <aside className="flex min-h-[520px] items-center justify-center rounded-[2rem] border border-cyan-300/10 bg-cyan-950/20 p-6 shadow-[inset_0_0_80px_rgba(34,211,238,0.08)]">
+        {/* Added `items-start` to prevent column stretching */}
+        <section className="mx-auto grid min-h-[calc(100vh-82px)] w-full max-w-[1560px] items-start grid-cols-1 gap-8 px-6 py-8 lg:grid-cols-[380px_minmax(480px,1fr)_380px] xl:grid-cols-[420px_minmax(560px,1fr)_420px]">
+          
+          {/* LEFT SIDEBAR: Camera */}
+          {/* Added `sticky top-28 h-fit` and removed `min-h-[520px]` */}
+          <aside className="sticky top-28 h-fit flex items-center justify-center rounded-[2rem] border border-white/5 bg-[#0b1120]/40 p-6 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
             <FaceExpression
               onMoodDetected={handleMoodSelect}
               onExpressionChange={setDetectedMood}
             />
           </aside>
 
-          <section className="flex min-w-0 flex-col gap-7">
+          {/* CENTER COLUMN: Feed & Player */}
+          <section className="flex min-w-0 flex-col gap-8 pb-10">
             <CurrentMoodCard
               selectedMood={selectedMood}
               detectedMood={detectedMood}
@@ -205,33 +240,49 @@ const HomeContent = () => {
             />
 
             <MoodHistory 
-  recentHistory={recentHistory}
-  sevenDayHistory={weeklyHistory}          
-  onNoteUpdated={handleNoteUpdated}
-  onDeleted={handleDeletedEntry} // Attach the handler here
-  token={token}
-/>
+              recentHistory={recentHistory}
+              sevenDayHistory={weeklyHistory}          
+              onNoteUpdated={handleNoteUpdated}
+              onDeleted={handleDeletedEntry}
+              token={token}
+            />
 
-            <Player />
+            <div className="flex w-full justify-center">
+              <Player />
+            </div>
+
             <VibeExport
-  song={song}
-  mood={selectedMood}
-  moodLabel={moodLabels[selectedMood]}
-/>
+              song={song}
+              mood={selectedMood}
+              moodLabel={moodLabels[selectedMood]}
+            />
 
+            {/* ERROR STATE */}
             {error && (
-              <p className="rounded-lg border border-red-300/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100">
-                {error}
-              </p>
+              <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 backdrop-blur-md ring-1 ring-red-500/20">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-400">
+                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                  </svg>
+                </div>
+                <p className="text-sm font-bold tracking-wide text-red-200">
+                  {error}
+                </p>
+              </div>
             )}
           </section>
 
-          <RecommendationsSidebar
-            recommendations={visibleRecommendations}
-            handleSelectSong={handleSelectSong}
-            moodLabels={moodLabels}
-            currentSong={song}
-          />
+          {/* RIGHT SIDEBAR: Recommendations */}
+          {/* Added `sticky top-28 h-fit` */}
+          <aside className="sticky top-28 h-fit pb-10">
+            <RecommendationsSidebar
+              recommendations={visibleRecommendations}
+              handleSelectSong={handleSelectSong}
+              moodLabels={moodLabels}
+              currentSong={song}
+            />
+          </aside>
+
         </section>
       </div>
     </main>
