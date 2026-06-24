@@ -11,7 +11,7 @@ const Navbar = () => {
     <nav className="border-b border-white/10 bg-[#0b1128]/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-[1480px] items-center justify-between px-5 py-5">
         
-        {/* Logo Section */}
+  
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-end justify-center gap-0.5 rounded-lg bg-violet-500/10 p-1.5 text-cyan-200">
             <span className="h-3 w-1 rounded-full bg-violet-400" />

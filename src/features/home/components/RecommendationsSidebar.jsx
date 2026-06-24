@@ -6,19 +6,18 @@ const RecommendationsSidebar = ({
 }) => {
   return (
     <aside className="grid min-h-[660px] grid-rows-[1fr_220px] gap-5 overflow-hidden rounded-lg border border-white/10 bg-[#242843]/50 p-4 text-white shadow-[0_24px_70px_rgba(0,0,0,0.35)] backdrop-blur-md">
-      
-      {/* Wrapper for Header and List */}
+
       <div className="flex min-h-0 flex-col gap-3">
         
-        {/* The New Aesthetic Header */}
+    
         <div className="flex items-center justify-between border-b border-white/5 pb-3 pl-1 pr-2">
           <div className="flex items-center gap-2.5">
-            {/* Animated Pulsing AI Dot */}
+       
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
             </span>
-            {/* Gradient Headline Text */}
+            
             <h2 className="bg-gradient-to-r from-cyan-300 to-emerald-200 bg-clip-text text-xs font-black uppercase tracking-[0.2em] text-transparent">
               AI Recommended Music
             </h2>

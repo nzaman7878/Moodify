@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// 1. MOCK DATA 
+ 
 const weeklyData = [
   { day: "Mon", mood: "Neutral", score: 50, time: "2:00 PM" },
   { day: "Tue", mood: "Happy", score: 85, time: "1:30 PM" },
@@ -19,7 +19,7 @@ const weeklyData = [
   { day: "Sun", mood: "Neutral", score: 55, time: "11:00 AM" },
 ];
 
-// 2. CUSTOM TOOLTIP 
+
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
@@ -66,7 +66,7 @@ const MoodAnalytics = ({ data = weeklyData }) => {
   return (
     <div className="w-full rounded-2xl border border-white/5 bg-white/5 p-6 flex flex-col">
       
-      {/* Header & Insight */}
+    
       <div className="mb-6">
         <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400">
           Weekly Vibe Check
