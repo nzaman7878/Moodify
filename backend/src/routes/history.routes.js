@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.post("/", historyController.logHistory);
 router.get("/", historyController.getHistory);
+router.get("/weekly", historyController.getWeeklyHistory);
 
 module.exports = router;
