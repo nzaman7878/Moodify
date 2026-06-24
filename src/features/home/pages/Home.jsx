@@ -8,6 +8,7 @@ import FaceExpression from "../../Expression/components/FaceExpression";
 import CurrentMoodCard from "../components/CurrentMoodCard";
 import MoodHistory from "../components/MoodHistory";
 import RecommendationsSidebar from "../components/RecommendationsSidebar";
+import VibeExport from "../components/VibeExport";
 
 const fallbackRecommendations = [
   "Fateh Kar Fateh (From Fateh)",
@@ -212,6 +213,11 @@ const HomeContent = () => {
 />
 
             <Player />
+            <VibeExport
+  song={song}
+  mood={selectedMood}
+  moodLabel={moodLabels[selectedMood]}
+/>
 
             {error && (
               <p className="rounded-lg border border-red-300/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100">
