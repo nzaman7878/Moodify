@@ -3,13 +3,13 @@ import MoodFace from "./MoodFace";
 import MoodAnalytics from "./MoodAnalytics";
 import TimelineItem from "./TimelineItem"; 
 
-const MoodHistory = ({ recentHistory = [], sevenDayHistory = [], onNoteUpdated, token }) => {
+// 1. Add onDeleted to the props here
+const MoodHistory = ({ recentHistory = [], sevenDayHistory = [], onNoteUpdated, onDeleted, token }) => {
   const [activeTab, setActiveTab] = useState("today");
 
   return (
     <div className="rounded-lg border border-white/10 bg-[#242843]/90 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
       
-     
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-200">
@@ -28,7 +28,6 @@ const MoodHistory = ({ recentHistory = [], sevenDayHistory = [], onNoteUpdated, 
         )}
       </div>
 
-    
       <div className="mt-5 grid grid-cols-2 rounded-md bg-white/10 p-1">
         <button
           onClick={() => setActiveTab("today")}
@@ -52,28 +51,25 @@ const MoodHistory = ({ recentHistory = [], sevenDayHistory = [], onNoteUpdated, 
         </button>
       </div>
 
-      
       <div className="mt-4 space-y-3">
         {activeTab === "today" ? (
-         
           recentHistory.length === 0 ? (
             <div className="py-6 text-center text-sm font-medium text-slate-400">
               No history recorded yet.
             </div>
           ) : (
             recentHistory.map((item, index) => (
-              
               <TimelineItem 
                 key={item._id || `${item.label}-${item.time}-${index}`}
                 item={item}
                 index={index}
                 token={token}
                 onNoteUpdated={onNoteUpdated}
+                onDeleted={onDeleted} // 2. Pass it down to the child component
               />
             ))
           )
         ) : (
-          
           <div className="pt-2">
             <MoodAnalytics data={sevenDayHistory} />
           </div>

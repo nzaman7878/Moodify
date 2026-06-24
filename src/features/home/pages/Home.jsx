@@ -94,6 +94,7 @@ const HomeContent = () => {
   const [recentHistory, setRecentHistory] = useState([]);
   const [weeklyHistory, setWeeklyHistory] = useState([]);
   const [error, setError] = useState("");
+  const token = localStorage.getItem("token");
 
   const loadRecentHistory = useCallback(async () => {
     const data = await getMoodHistory();
@@ -174,6 +175,12 @@ const HomeContent = () => {
   const visibleRecommendations =
     recommendations?.length > 0 ? recommendations : fallbackRecommendations;
 
+   const handleDeletedEntry = (itemId) => {
+  setRecentHistory((prevHistory) => 
+    prevHistory.filter(item => item._id !== itemId)
+  );
+};
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#080d22] text-white">
       <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_18%_26%,rgba(43,205,213,0.22),transparent_30%),radial-gradient(circle_at_68%_18%,rgba(31,123,186,0.22),transparent_28%),linear-gradient(135deg,#070b1d_0%,#0b1430_48%,#070918_100%)]" />
@@ -196,11 +203,13 @@ const HomeContent = () => {
               moodLabels={moodLabels}
             />
 
-            <MoodHistory
-              recentHistory={recentHistory.slice(0, 4)}
-              sevenDayHistory={weeklyHistory}
-              onNoteUpdated={handleNoteUpdated}
-            />
+            <MoodHistory 
+  recentHistory={recentHistory}
+  sevenDayHistory={weeklyHistory}          
+  onNoteUpdated={handleNoteUpdated}
+  onDeleted={handleDeletedEntry} // Attach the handler here
+  token={token}
+/>
 
             <Player />
 

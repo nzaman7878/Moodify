@@ -16,3 +16,14 @@ export const updateTimelineNote = async (timelineId, noteText) => {
 
   return response.json();
 };
+
+
+export const deleteTimelineEntry = async (timelineId) => {
+  const response = await fetch(`http://localhost:3000/api/timeline/${timelineId}`, {
+    method: 'DELETE',
+    credentials: 'include'
+  });
+
+  if (!response.ok) throw new Error('Failed to delete entry');
+  return response.json();
+};

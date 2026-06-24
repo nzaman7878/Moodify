@@ -1,32 +1,29 @@
 import { useState, useEffect } from "react";
 import MoodFace from "./MoodFace";
-import { updateTimelineNote } from "../services/timeline.api"; // Import your API function
-const TimelineItem = ({ item, index, token, onNoteUpdated }) => {
+import { updateTimelineNote, deleteTimelineEntry } from "../services/timeline.api"; 
+
+// 1. Ensure you receive 'onDeleted' as a prop
+const TimelineItem = ({ item, index, token, onNoteUpdated, onDeleted }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [note, setNote] = useState(item.note || "");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  
   useEffect(() => {
     if (!isEditing) {
       setNote(item.note || "");
     }
   }, [item.note, isEditing]);
+
   const handleSave = async () => {
-   
     if (note.trim() === (item.note || "")) {
       setIsEditing(false);
       return;
     }
-
     setIsSaving(true);
     try {
-     
       await updateTimelineNote(item._id, note, token);
-      
-
       if (onNoteUpdated) onNoteUpdated(item._id, note);
-      
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to save note", error);
@@ -35,14 +32,27 @@ const TimelineItem = ({ item, index, token, onNoteUpdated }) => {
     }
   };
 
+  // 2. Add the delete handler
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this mood entry?")) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteTimelineEntry(item._id, token); // Ensure token is passed if your API requires it
+      if (onDeleted) onDeleted(item._id);
+    } catch (error) {
+      console.error("Failed to delete entry", error);
+      setIsDeleting(false); // Reset state if it fails so user can try again
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter") handleSave();
   };
 
   return (
-    <div className="group flex flex-col gap-2 rounded-md border border-white/10 bg-white/[0.06] px-3 py-3 transition-colors hover:bg-white/10">
+    <div className={`group flex flex-col gap-2 rounded-md border border-white/10 bg-white/[0.06] px-3 py-3 transition-all hover:bg-white/10 ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}>
       
-     
       <div className="flex items-center gap-3">
         <span
           className={`h-2.5 w-2.5 rounded-full ${
@@ -58,9 +68,17 @@ const TimelineItem = ({ item, index, token, onNoteUpdated }) => {
         <span className="text-xs font-semibold text-white/60">
           {item.time}
         </span>
+        
+        {/* 3. Add the Delete Button (appears on group hover) */}
+        <button 
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="text-xs font-medium text-red-400/60 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+        >
+          {isDeleting ? "..." : "Delete"}
+        </button>
       </div>
 
-     
       <div className="ml-6 pl-2 border-l border-white/10 mt-1">
         {isEditing ? (
           <div className="flex flex-col gap-2 mt-1">
