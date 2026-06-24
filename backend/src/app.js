@@ -5,6 +5,7 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const songRoutes = require("./routes/song.routes");
 const historyRoutes = require("./routes/history.routes");
+const timelineRoutes = require('./routes/timeline.routes');
 
 const app = express();
 const allowedOrigins = [
@@ -30,8 +31,10 @@ app.use(
   })
 );
 
+
 app.use("/api/auth", authRoutes);
 app.use("/api/songs", songRoutes);
 app.use("/api/history", historyRoutes);
+app.use('/api/timeline', timelineRoutes);
 
 module.exports = app;
