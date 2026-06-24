@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 const blacklistModel = require("../models/backlist.model");
 const redisClient = require("../config/cache");
 
-
 async function registerUser(req, res) {
   try {
     const { username, email, password } = req.body;
@@ -27,23 +26,17 @@ async function registerUser(req, res) {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
+    // ✅ No manual hashing — pre-save hook in user.model.js handles it
     const user = await userModel.create({
       username,
       email,
-      password: hashedPassword,
+      password, // ← plain password
     });
 
     const token = jwt.sign(
-      {
-        id: user._id,
-        username: user.username,
-      },
+      { id: user._id, username: user.username },
       process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
+      { expiresIn: "7d" }
     );
 
     res.cookie("token", token, {
@@ -62,8 +55,7 @@ async function registerUser(req, res) {
       token,
     });
   } catch (error) {
-    console.error(error);
-
+    console.error("REGISTER ERROR:", error);
     res.status(500).json({
       success: false,
       message: error.message,

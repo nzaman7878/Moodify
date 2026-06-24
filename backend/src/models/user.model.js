@@ -21,38 +21,19 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-
-userSchema.pre("save", async function (next) {
-  
-  if (!this.isModified("password")) {
-    return next();
-  }
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next(); 
-  } catch (error) {
-    next(error);
-  }
+// ✅ async pre-save hook — no next() needed with async/await
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
-
-userSchema.post("save", function (doc, next) {
-
-
-  next();
-});
-
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 const userModel = mongoose.model("User", userSchema);
-
 module.exports = userModel;
